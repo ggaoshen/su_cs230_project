@@ -1,3 +1,4 @@
+# from sequence_generator import Single_Signal_Generator
 import numpy as np
 import pandas as pd
 import alpha_vantage.timeseries as alpha
@@ -46,7 +47,7 @@ class Market:
         self.action_labels = ["buy 50", "buy 10", "hold", "sell 10", "sell 50"]
         self.max_position = 50 # max number of shares can hold given stock
         self.min_position = -20 # min number of shares can hold given stock
-        self.positions = np.zeros((data.shape[0]+1, data.shape[1])) # add initial position at t0, non-cash poositions are in number of shares
+        self.positions = np.zeros((data.shape[0], data.shape[1])) # add initial position at t0, non-cash poositions are in number of shares
         # self.cash_positions = np.zeros((data.shape[0]+1, 1)) # cash positions in $
         # self.cash_positions[0] = 1000000 # initial cash position
         self.data = data.values
@@ -56,9 +57,10 @@ class Market:
         self.buy_cost = buy_cost
         self.risk_averse = risk_averse
         self.state_shape = (last_n_timesteps, data.shape[1]) # # of stock price ts, position history
-        self.portfolio_value = np.zeros((data.shape[0]+1, 1)) # portfolio return, portfolio risk as states
-        self.portfolio_value[0] = 1000000 # initial portfolio value in cash
+        self.portfolio_value = np.zeros((data.shape[0], 1)) # portfolio return, portfolio risk as states
+        # self.portfolio_value[0] = 1000000 # initial portfolio value in cash
         self.start_index = last_n_timesteps - 1
+        self.portfolio_value[:self.start_index+1] = 1000000
         self.current_index = self.start_index
         self.last_index = None
         self.reset()
@@ -81,9 +83,11 @@ class Market:
     def get_state(self):
         state = self.sample_2d[self.current_index - self.last_n_timesteps + 1: self.current_index + 1, :].copy()
 
+        # normalize input
         for i in range(state.shape[1]):
             norm = np.mean(state[:,i])
-            state[:,i] = (state[:,i]/norm - 1.)*100
+            stdev = np.std(state[:,i])
+            state[:,i] = (state[:,i] - norm)/stdev
 
         return state
 
@@ -98,12 +102,12 @@ class Market:
     def get_reward(self, action):
         # calculate trades and update positions
         trades = self.get_trades(action) # get trades (list of change in shares for each stock)
-        self.positions[self.current_index+2, :] = self.positions[self.current_index+1, :] + trades
+        self.positions[self.current_index+1, :] = self.positions[self.current_index, :] + trades
 
         # prune trades based on trading limits
-        self.positions[self.current_index+2, :] = np.clip(self.positions[self.current_index+2, :], self.min_position, self.max_position)
+        self.positions[self.current_index+1, :] = np.clip(self.positions[self.current_index+1, :], self.min_position, self.max_position)
         # print('positions t+2', self.positions[self.current_index+2, :])
-        trades_pruned = self.positions[self.current_index+2, :] - self.positions[self.current_index+1, :] # revised trades
+        trades_pruned = self.positions[self.current_index+1, :] - self.positions[self.current_index, :] # revised trades
         # print('trades_pruned', trades_pruned)
         # self.cash_positions[self.current_index+2, 0] = self.cash_positions[self.current_index+1, 0] + np.inner(trades_pruned * -1, self.sample_2d[self.current_index+1, :])
 
@@ -113,12 +117,12 @@ class Market:
         # reward = self.portfolio_value[self.current_index+2, 0] - self.portfolio_value[self.current_index+1, 0] # reward is total portfolio pnl
         # reward -= np.sum(np.abs(trades_pruned)) * self.buy_cost         # apply transaction cost. assuming buy and sell have similar market impact
 
-        reward = (self.sample_2d[self.current_index+1, :] - self.sample_2d[self.current_index, :]) * self.positions[self.current_index+1, :] # reward by asset
+        reward = (self.sample_2d[self.current_index+1, :] - self.sample_2d[self.current_index, :]) * self.positions[self.current_index, :] # reward by asset
         # print('reward', reward)
         reward -= np.abs(trades_pruned) * self.buy_cost # reduce reward by transaction cost 
         # print('reward', reward)
         # print(self.portfolio_value[self.current_index+1, 0])
-        self.portfolio_value[self.current_index+2, 0] = self.portfolio_value[self.current_index+1, 0] + np.sum(reward)
+        self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum(reward)
         # print(self.portfolio_value[self.current_index+2, 0])
         # trades_pruned * -1 * self.sample_2d[self.current_index+1, :] # cash change resulted from trading
         # reward += self.sample_2d[self.current_index+1, :], self.positions[self.current_index+2, :] - self.sample_2d[self.current_index, :], self.positions[self.current_index+1, :] # asset position mv change
@@ -129,7 +133,7 @@ class Market:
         # if reward < 0:
         #     reward *= (1. + self.risk_averse)
 
-        return reward
+        return reward/self.portfolio_value[self.current_index, 0] # normalize reward by t-1 portfolio value
 
 
     def step(self, action): # action is a list of chosen actions for each stock

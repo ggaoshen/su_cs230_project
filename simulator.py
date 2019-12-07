@@ -56,6 +56,7 @@ class Simulator:
             safe_episode_reward = self.play_one_episode(0, training=False)
             safe_episode_rewards.append(safe_episode_reward)
 
+            print(episode_no, exploration_episode_reward, safe_episode_reward)
 
             if epsilon > min_epsilon:
                 epsilon *= epsilon_decay
@@ -63,22 +64,22 @@ class Simulator:
             if episode_no % progress_report == 0:
                 fig = plt.figure()
                 ax1 = fig.add_subplot(2, 1, 1)
-                ax1.plot(exploration_episode_rewards, 'red')
+                ax1.plot(exploration_episode_rewards, 'blue')
                 # ax1.plot(exploration_max_episode_rewards, 'blue')
 
                 ax2 = fig.add_subplot(2, 1, 2)
-                ax2.plot(safe_episode_rewards, 'red')
+                ax2.plot(safe_episode_rewards, 'blue')
                 # ax2.plot(safe_max_episode_rewards, 'blue')
 
                 fig.savefig('training_progress_' + str(episode_no) + '_episodes.png')
 
         fig = plt.figure()
         ax1 = fig.add_subplot(2, 1, 1)
-        ax1.plot(exploration_episode_rewards, 'red')
+        ax1.plot(exploration_episode_rewards, 'blue')
         # ax1.plot(exploration_max_episode_rewards, 'blue')
 
         ax2 = fig.add_subplot(2, 1, 2)
-        ax2.plot(safe_episode_rewards, 'red')
+        ax2.plot(safe_episode_rewards, 'blue')
         # ax2.plot(safe_max_episode_rewards, 'blue')
         
         fig.savefig('training_progress_' + str(no_of_episodes_train) + '_episodes.png')
