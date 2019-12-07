@@ -40,18 +40,19 @@ def get_ts(ticker, tick='batch_daily_adjusted', dropna=True):
 
 class Market:
 
-    def __init__(self, data, last_n_timesteps, buy_cost, risk_averse=0.05):
+    def __init__(self, data, last_n_timesteps, buy_cost, risk_averse=0.2):
         
         self.no_of_actions = 5 # buy 50, buy 10, hold, sell 10, sell 50
-        self.action_quantities = np.array([50, 10, 0, -10, -50])
+        self.action_quantities = np.array([10000, 1000, 0, -1000, -10000])
         self.action_labels = ["buy 50", "buy 10", "hold", "sell 10", "sell 50"]
-        self.max_position = 50 # max number of shares can hold given stock
-        self.min_position = -20 # min number of shares can hold given stock
-        self.positions = np.zeros((data.shape[0], data.shape[1])) # add initial position at t0, non-cash poositions are in number of shares
+        self.initial_wealth = 1000000
         # self.cash_positions = np.zeros((data.shape[0]+1, 1)) # cash positions in $
         # self.cash_positions[0] = 1000000 # initial cash position
         self.data = data.values
         self.tickers = data.columns
+        self.max_position = self.initial_wealth//np.min(self.data[0]) # max number of shares can hold given stock
+        self.min_position = - self.max_position//2 # min number of shares can hold given stock
+        self.positions = np.zeros((data.shape[0], data.shape[1])) # add initial position at t0, non-cash poositions are in number of shares
         self.valid_actions = self.get_actions() # list of possible actions e.g. [0,1,2,3,4]
         self.last_n_timesteps = last_n_timesteps
         self.buy_cost = buy_cost
@@ -60,7 +61,7 @@ class Market:
         self.portfolio_value = np.zeros((data.shape[0], 1)) # portfolio return, portfolio risk as states
         # self.portfolio_value[0] = 1000000 # initial portfolio value in cash
         self.start_index = last_n_timesteps - 1
-        self.portfolio_value[:self.start_index+1] = 1000000
+        self.portfolio_value[:self.start_index+1] = self.initial_wealth
         self.current_index = self.start_index
         self.last_index = None
         self.reset()
@@ -118,11 +119,14 @@ class Market:
         # reward -= np.sum(np.abs(trades_pruned)) * self.buy_cost         # apply transaction cost. assuming buy and sell have similar market impact
 
         reward = (self.sample_2d[self.current_index+1, :] - self.sample_2d[self.current_index, :]) * self.positions[self.current_index, :] # reward by asset
-        # print('reward', reward)
         reward -= np.abs(trades_pruned) * self.buy_cost # reduce reward by transaction cost 
+
         # print('reward', reward)
         # print(self.portfolio_value[self.current_index+1, 0])
         self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum(reward)
+        return_since_inception = (self.portfolio_value[self.current_index+1, 0] / self.initial_wealth - 1) * 100
+        if np.sum(reward) != 0.: reward = return_since_inception * reward / np.sum(reward) # pnl allocated to each asset
+        else: reward = reward * 0
         # print(self.portfolio_value[self.current_index+2, 0])
         # trades_pruned * -1 * self.sample_2d[self.current_index+1, :] # cash change resulted from trading
         # reward += self.sample_2d[self.current_index+1, :], self.positions[self.current_index+2, :] - self.sample_2d[self.current_index, :], self.positions[self.current_index+1, :] # asset position mv change
@@ -130,10 +134,10 @@ class Market:
         # assert len(reward) == len(self.tickers)
 
         # # add risk aversion
-        # if reward < 0:
-        #     reward *= (1. + self.risk_averse)
+        reward = [r * (1. + self.risk_averse) if r<0 else r for r in reward ]
+        # print(', price: ', self.sample_2d[self.current_index+1, :], 'trades: ', trades_pruned, ', positioins: ', self.positions[self.current_index+1, :], ', reward: ', reward, ', portfolio value: ', self.portfolio_value[self.current_index+1, :], '\n')
 
-        return reward/self.portfolio_value[self.current_index, 0] # normalize reward by t-1 portfolio value
+        return reward # normalize reward by t-1 portfolio value
 
 
     def step(self, action): # action is a list of chosen actions for each stock
