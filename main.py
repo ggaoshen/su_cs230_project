@@ -1,7 +1,6 @@
 from environment import Market, get_ts
 from model import Q_Model
 from agent import Agent
-from sequence_generator import Single_Signal_Generator
 from simulator import Simulator
 import pandas as pd
 
@@ -14,7 +13,9 @@ import pandas as pd
 # ticker=['AAPL', 'TSLA', 'MS']
 # sample = get_ts(ticker)
 # sample.to_csv('test_data.csv')
-sample = pd.read_csv('test_data.csv', index_col=0)
+import os
+print(os.getcwd())
+sample = pd.read_csv('data/test/test_data.csv', index_col=0)
 print(sample.head())
 # print(sample.shape)
 # print(sample.dtypes)
