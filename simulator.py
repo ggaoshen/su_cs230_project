@@ -16,7 +16,7 @@ class Simulator:
         done = False
         prev_cum_reward = np.zeros(len(self.env.tickers))
         # print(prev_cum_reward)
-        while not done:
+        while not done: # step through time
 
             action = self.agent.act(state, self.env.valid_actions)
             next_state, reward, done = self.env.step(action)
@@ -25,7 +25,8 @@ class Simulator:
             # print(prev_cum_reward)
 
             if training:
-                self.agent.remember((state, action, reward, next_state, done))
+                # self.agent.remember((state, action, reward, next_state, done))
+                self.agent.remember((state, action, prev_cum_reward, next_state, done))
                 self.agent.replay()
 
             state = next_state

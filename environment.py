@@ -57,19 +57,14 @@ class Market:
         self.reset()
 	
     def reset(self):
-        # self.isAvailable = True
+        # # shuffle stock order
+        # rand_stock_idx = np.arange(self.data.shape[1])
+        # np.random.shuffle(rand_stock_idx)        
+        # self.data = self.data[:, rand_stock_idx]
+        # self.data_ewa = self.data_ewa[:, rand_stock_idx]
+        # self.positions = self.positions[:, rand_stock_idx]
+        # self.tickers = self.tickers[rand_stock_idx]
 
-        # data = self.data
-        # sample_1d = np.reshape(data[:,0], data.shape[0])
-
-        # self.data = data.copy()
-        # self.normalized_values = sample_1d/sample_1d[0]*100
-        rand_stock_idx = np.arange(self.data.shape[1])
-        np.random.shuffle(rand_stock_idx)
-        self.data = self.data[:, rand_stock_idx]
-        self.data_ewa = self.data_ewa[:, rand_stock_idx]
-        self.positions = self.positions[:, rand_stock_idx]
-        self.tickers = self.tickers[rand_stock_idx]
         self.last_index = self.data.shape[0] - 1
         self.current_index = self.start_index
 
@@ -122,7 +117,7 @@ class Market:
         # print(self.portfolio_value[self.current_index+1, 0])
         self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum((self.data[self.current_index+1, :] - self.data[self.current_index, :]) * self.positions[self.current_index, :])
         # self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum(reward)
-        return_since_inception = (self.portfolio_value[self.current_index+1, 0] / self.initial_wealth - 1) * 100
+        return_since_inception = (self.portfolio_value[self.current_index+1, 0] / self.initial_wealth - 1)
         if np.sum(reward) != 0.: reward = return_since_inception * reward / np.sum(reward) # pnl allocated to each asset
         else: reward = reward * 0
         # print(self.portfolio_value[self.current_index+2, 0])

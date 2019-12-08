@@ -55,7 +55,7 @@ lstm_model = [
 ]
 
 # user input
-no_epochs = 300
+no_epochs = 5
 model_name = 'Dense_8stock_longonly_ewa'
 run_details = model_name + '_' + str(no_epochs) + '_eps'
 # learning rate: 0.005
@@ -63,7 +63,7 @@ run_details = model_name + '_' + str(no_epochs) + '_eps'
 
 # build model and agent
 q_model = Q_Model(model_name, state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":0.01})
-agent = Agent(q_model, batch_size=16, discount_factor=0.995, epsilon=1)
+agent = Agent(q_model, batch_size=16, discount_factor=0.995, epsilon=0.5)
 
 # train and test
 sim = Simulator(env_train, agent)

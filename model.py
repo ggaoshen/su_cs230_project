@@ -2,10 +2,12 @@ import keras
 from keras.layers import Dense, Conv1D, Dropout, Flatten, MaxPooling1D, AveragePooling1D, Reshape, GRU, LSTM
 from keras.models import save_model, Sequential, load_model
 from keras.optimizers import Adam
+from keras.callbacks.tensorboard_v2 import TensorBoard
 from datetime import datetime
 import numpy as np
 import sys
 import os
+
 
 class Q_Model():
 
@@ -19,8 +21,12 @@ class Q_Model():
             self._build(layers, hyperparameters)
             self.loaded_model = False
 
-    def _build(self, layers, hyperparameters):
+        modelname = self.model_type+'-{}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.tensorboard = TensorBoard(log_dir='log/{}'.format(modelname))
+        
 
+    def _build(self, layers, hyperparameters):
+        
         model = Sequential()
         for i in range(len(layers)):
             layer = layers[i]
@@ -58,7 +64,7 @@ class Q_Model():
 
         elif output_shape:
             # if output_shape > self.no_of_actions: # in case of multi-stock inputs, output_shape is multiple of no_of_acitons. need to reshape
-            return Dense(units=output_shape, activation="linear")
+            return Dense(units=output_shape, activation="hard_sigmoid") # use hard sigmoid for speed
             # else: 
             #     return Dense(units=output_shape, activation="linear")
 
@@ -113,7 +119,14 @@ class Q_Model():
         for stock_i, action_for_stock_i in enumerate(action):
             q_hat[action_for_stock_i, stock_i] = q_values[stock_i]
 
-        self.model.fit(add_dim(state, self.state_dim), add_dim(q_hat, (self.no_of_actions * self.state_dim[1], )), epochs=1, verbose=0) # actual keras model.fit
+        self.model.fit(add_dim(state, self.state_dim), 
+        add_dim(q_hat, (self.no_of_actions * self.state_dim[1], )),
+        # validation_split=0.3, 
+        # callbacks = [self.tensorboard], 
+        epochs=5,
+        # verbose=0
+        ) # actual keras model.fit
+        # print(history.history['loss'])
 
     def predict(self, state):
         return self.model.predict(add_dim(state, self.state_dim))
