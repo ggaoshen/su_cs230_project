@@ -2,6 +2,7 @@ from environment import Market, get_ts
 from model import Q_Model
 from agent import Agent
 from simulator import Simulator
+from visualization import Visualize
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -53,17 +54,27 @@ lstm_model = [
     # {"type":"Dense", "units":16, "activation":"relu"}
 ]
 
-q_model = Q_Model("Dense_8stocks", state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":0.0001})
-agent = Agent(q_model, batch_size=8, discount_factor=0.995, epsilon=1)
+# user input
+no_epochs = 10
+model_name = 'Dense_8stock_longonly_ewa'
+run_details = model_name + '_' + str(no_epochs) + '_eps'
+# learning rate: 0.01
+# experience replay batch_size = 16
 
-no_epochs = 1
+# build model and agent
+q_model = Q_Model(model_name, state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":0.01})
+agent = Agent(q_model, batch_size=16, discount_factor=0.995, epsilon=1)
 
+# train and test
 sim = Simulator(env_train, agent)
 ep_end_portf_val_train, last_eps_position_ts_train, exploration_episode_rewards_train = sim.train(no_epochs, epsilon_decay=0.995)
-print(ep_end_portf_val_train)
 
-# agent.model.save() 
+# save model snapshot 
+agent.model.save() 
 
 sim_test = Simulator(env_test, agent)
 test_portf_val_ts, test_position_ts, test_ending_rewards = sim_test.test()
-# print(test_portf_val_ts)
+
+# visualize result
+viz = Visualize(env_train, env_test, ep_end_portf_val_train, exploration_episode_rewards_train, run_details)
+viz.save_test_results()

@@ -53,7 +53,7 @@ class Market:
         self.data_ewa = data.ewm(com=9.5).mean().values # 20-day exponentially moving average
         self.tickers = data.columns
         self.max_position = self.initial_wealth//np.min(self.data[0]) # max number of shares can hold given stock
-        self.min_position = - self.max_position//2 # min number of shares can hold given stock
+        self.min_position = 0. # - self.max_position//2 # min number of shares can hold given stock
         self.positions = np.zeros(data.shape) # add initial position at t0, non-cash poositions are in number of shares
         self.valid_actions = self.get_actions() # list of possible actions e.g. [0,1,2,3,4]
         self.last_n_timesteps = last_n_timesteps

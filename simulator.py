@@ -69,12 +69,12 @@ class Simulator:
 
             #     fig.savefig('training_progress_' + str(episode_no) + '_episodes.png')
 
-        fig = plt.figure()
-        ax1 = fig.add_subplot(2, 1, 1)
-        ax1.plot(episode_ending_portfolio_values, 'blue')
-        ax2 = fig.add_subplot(2, 1, 2)
-        ax2.plot(self.env.positions[:])
-        plt.savefig('training_progress_and_positions_' + str(num_epochs) + '_episodes.png')
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(2, 1, 1)
+        # ax1.plot(episode_ending_portfolio_values, 'blue')
+        # ax2 = fig.add_subplot(2, 1, 2)
+        # ax2.plot(self.env.positions[:])
+        # plt.savefig('training_progress_and_positions_' + str(num_epochs) + '_episodes.png')
 
         return episode_ending_portfolio_values, self.env.positions[:], exploration_episode_rewards # return potf value by each episode, last episode's positions
 
@@ -92,7 +92,7 @@ class Simulator:
             # test_episode_reward, max_reward = self.play_one_episode(0, training=False)
             # test_episode_rewards.append(test_episode_reward)
             # max_rewards.append(max_reward)
-            test_episode_reward = self.play_one_episode(0, training=False)
+            test_episode_reward = self.play_one_episode(0.2, training=False)
             # test_episode_rewards.append(test_episode_reward)
             # episode_ending_portfolio_values.append(self.env.portfolio_value[-1])
             # max_rewards.append(max_reward)
@@ -101,14 +101,14 @@ class Simulator:
             # print('\n test positions shape', self.env.positions.shape)
             # print('\n test test_episode_reward shape', test_episode_reward.shape)
         
-        fig = plt.figure()
-        ax1 = fig.add_subplot(2, 1, 1)
-        ax1.plot(self.env.portfolio_value[:], 'blue')
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(2, 1, 1)
+        # ax1.plot(self.env.portfolio_value[:], 'blue')
 
-        ax2 = fig.add_subplot(2, 1, 2)
-        ax2.plot(self.env.positions[:])
+        # ax2 = fig.add_subplot(2, 1, 2)
+        # ax2.plot(self.env.positions[:])
 
-        plt.savefig('test_results_and_positions.png')
+        # plt.savefig('test_results_and_positions.png')
 
         # positive_percentage = sum(x > 0 for x in test_episode_rewards)/len(test_episode_rewards)
 
