@@ -55,10 +55,10 @@ lstm_model = [
 ]
 
 # user input
-no_epochs = 10
+no_epochs = 300
 model_name = 'Dense_8stock_longonly_ewa'
 run_details = model_name + '_' + str(no_epochs) + '_eps'
-# learning rate: 0.01
+# learning rate: 0.005
 # experience replay batch_size = 16
 
 # build model and agent

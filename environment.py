@@ -27,18 +27,6 @@ def get_ts(ticker, tick='batch_daily_adjusted', dropna=True):
         data.dropna(inplace=True)
     return data
 
-# def find_ideal(p, just_once):
-# 	if not just_once:
-# 		diff = np.array(p[1:]) - np.array(p[:-1])
-# 		return sum(np.maximum(np.zeros(diff.shape), diff))
-# 	else:
-# 		best = 0.
-# 		i0_best = None
-# 		for i in range(len(p)-1):
-# 			best = max(best, max(p[i+1:]) - p[i])
-
-# 		return best
-
 class Market:
 
     def __init__(self, data, last_n_timesteps, trans_cost, risk_averse=0.2):
