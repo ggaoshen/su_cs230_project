@@ -35,7 +35,7 @@ class Simulator:
     def train(self, num_epochs, epsilon_decay=0.995, min_epsilon=0.01, epsilon=1, progress_report=100):
 
         exploration_episode_rewards = []
-        safe_episode_rewards = []
+        episode_ending_portfolio_values = [] # portfolio value by each epoch 
         # exploration_max_episode_rewards = []
         # safe_max_episode_rewards = []
 
@@ -50,47 +50,38 @@ class Simulator:
             # exploration_max_episode_rewards.append(exploration_max_episode_reward)
             exploration_episode_reward = self.play_one_episode(epsilon, training=True)
             exploration_episode_rewards.append(exploration_episode_reward)
+            episode_ending_portfolio_values.append(self.env.portfolio_value[-1][0])
 
-            # safe_episode_reward, safe_max_episode_reward = self.play_one_episode(0, training=False)
-            # safe_episode_rewards.append(safe_episode_reward)
-            # safe_max_episode_rewards.append(safe_max_episode_reward)
-            # safe_episode_reward = self.play_one_episode(0, training=False)
-            # safe_episode_rewards.append(safe_episode_reward)
-
-            print('\n', episode_no, exploration_episode_reward, self.env.portfolio_value[-1], self.env.positions[-1])
-            # print(exploration_episode_rewards)
-            # print('\n training positions shape', self.env.positions.shape)
+            # print('\n', episode_no, exploration_episode_reward, self.env.portfolio_value[-1], self.env.positions[-1])
 
             if epsilon > min_epsilon:
                 epsilon *= epsilon_decay
 
-            if episode_no % progress_report == 0:
-                fig = plt.figure()
-                ax1 = fig.add_subplot(2, 1, 1)
-                ax1.plot(exploration_episode_rewards, 'blue')
-                # ax1.plot(exploration_max_episode_rewards, 'blue')
+            # if episode_no % progress_report == 0:
+            #     fig = plt.figure()
+            #     ax1 = fig.add_subplot(2, 1, 1)
+            #     ax1.plot(exploration_episode_rewards, 'blue')
+            #     # ax1.plot(exploration_max_episode_rewards, 'blue')
 
-                # ax2 = fig.add_subplot(2, 1, 2)
-                # ax2.plot(safe_episode_rewards, 'blue')
-                # ax2.plot(safe_max_episode_rewards, 'blue')
+            #     # ax2 = fig.add_subplot(2, 1, 2)
+            #     # ax2.plot(safe_episode_rewards, 'blue')
+            #     # ax2.plot(safe_max_episode_rewards, 'blue')
 
-                fig.savefig('training_progress_' + str(episode_no) + '_episodes.png')
+            #     fig.savefig('training_progress_' + str(episode_no) + '_episodes.png')
 
-        plt.figure()
-        plt.plot(exploration_episode_rewards, 'blue')
-        # ax1.plot(exploration_max_episode_rewards, 'blue')
+        fig = plt.figure()
+        ax1 = fig.add_subplot(2, 1, 1)
+        ax1.plot(episode_ending_portfolio_values, 'blue')
+        ax2 = fig.add_subplot(2, 1, 2)
+        ax2.plot(self.env.positions[:])
+        plt.savefig('training_progress_and_positions_' + str(num_epochs) + '_episodes.png')
 
-        # ax2 = fig.add_subplot(2, 1, 2)
-        # ax2.plot(safe_episode_rewards, 'blue')
-        # ax2.plot(safe_max_episode_rewards, 'blue')
-        
-        plt.savefig('training_progress_' + str(num_epochs) + '_episodes.png')
-        return exploration_episode_rewards
+        return episode_ending_portfolio_values, self.env.positions[:], exploration_episode_rewards # return potf value by each episode, last episode's positions
 
     def test(self):
 
-        test_episode_rewards = []
-        # max_rewards = []
+        # test_episode_rewards = []
+        # episode_ending_portfolio_values = [] # portfolio value by each epoch 
 
         print("-"*60)
         print("Testing")
@@ -102,18 +93,23 @@ class Simulator:
             # test_episode_rewards.append(test_episode_reward)
             # max_rewards.append(max_reward)
             test_episode_reward = self.play_one_episode(0, training=False)
-            test_episode_rewards.append(test_episode_reward)
+            # test_episode_rewards.append(test_episode_reward)
+            # episode_ending_portfolio_values.append(self.env.portfolio_value[-1])
             # max_rewards.append(max_reward)
             
-            print('\n', episode_no, test_episode_reward, self.env.portfolio_value[-1], self.env.positions[-1])
+            # print('\n', episode_no, test_episode_reward, self.env.portfolio_value[-1], self.env.positions[-1])
             # print('\n test positions shape', self.env.positions.shape)
             # print('\n test test_episode_reward shape', test_episode_reward.shape)
         
+        fig = plt.figure()
+        ax1 = fig.add_subplot(2, 1, 1)
+        ax1.plot(self.env.portfolio_value[:], 'blue')
 
-        plt.figure()
-        plt.plot(test_episode_rewards, 'green')
-        plt.savefig('test_results.png')
-        
+        ax2 = fig.add_subplot(2, 1, 2)
+        ax2.plot(self.env.positions[:])
+
+        plt.savefig('test_results_and_positions.png')
+
         # positive_percentage = sum(x > 0 for x in test_episode_rewards)/len(test_episode_rewards)
 
         # print("-"*60)
@@ -122,4 +118,4 @@ class Simulator:
         # # print("Positive Reward Percentage:", positive_percentage)
         # print("-"*60)
 
-        return test_episode_rewards
+        return self.env.portfolio_value[:], self.env.positions[:], test_episode_reward # return potf value by each episode, last episode's positions

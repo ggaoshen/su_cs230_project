@@ -1,0 +1,9 @@
+Layer 1
+type: Reshape	target_shape: (160,)	
+
+Layer 2
+type: Dense	units: 512	
+
+Layer 3
+type: Dense	units: 32	
+

@@ -22,7 +22,8 @@ class Agent:
             q_valid = self._get_q_valid(state)
             # if np.nanmin(q_valid) != np.nanmax(q_valid):
             return np.nanargmax(q_valid, axis=0)
-        return np.array(random.sample(list(valid_actions), state.shape[1]))
+        # return np.array(random.sample(list(valid_actions), state.shape[1]))
+        return np.random.choice(len(valid_actions), state.shape[1])
 
     def remember(self, experience):
         self.memory.append(experience)
