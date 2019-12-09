@@ -6,12 +6,6 @@ from visualization import Visualize
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# sampler = Single_Signal_Generator(total_timesteps=180, period_range=(10, 40), amplitude_range=(5, 80), noise_amplitude_ratio=0.5)
-# filename = "Generated Signals.npy"
-# sampler.build_signals(filename, 1000)
-# sampler.load(filename)
-# env = Market(sampler=sampler, last_n_timesteps=40, trans_cost=3.3)
-
 # ticker=['MS']
 # ticker=['TSLA']
 # ticker=['TSLA', 'GOOGL', 'MS', 'KO', 'CVX', 'HD', 'MMM' ,'BA']
@@ -20,11 +14,8 @@ import matplotlib.pyplot as plt
 sample = pd.read_csv('data/test/test_data_8stockmix.csv', index_col=0)
 # sample = pd.read_csv('data/test/test_data.csv', index_col=0)
 print(sample.head())
-# print(sample.shape)
-# print(sample.dtypes)
 env_train = Market(sample.iloc[:1500, :], 20, 0.5)
 env_test = Market(sample.iloc[1500:, :], 20, 0.5)
-# env.reset()
 
 dense_model = [
     {"type":"Reshape", "target_shape":(env_train.get_state().shape[0]*env_train.get_state().shape[1],)},
@@ -51,7 +42,6 @@ lstm_model = [
     {"type":"LSTM", "units":16, "return_sequences":True},
     {"type":"LSTM", "units":16, "return_sequences":False},
     {"type":"Dense", "units":16, "activation":"relu"},
-    # {"type":"Dense", "units":16, "activation":"relu"}
 ]
 
 # user input
@@ -59,7 +49,6 @@ no_epochs = 250
 model_name = 'Dense_8stock_longonly_ewa'
 run_details = model_name + '_' + str(no_epochs) + '_eps'
 learning_rate = 0.0001
-# experience replay batch_size = 16
 
 # build model and agent
 q_model = Q_Model(model_name, state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":learning_rate})

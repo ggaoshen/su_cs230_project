@@ -85,8 +85,6 @@ class Visualize():
         else: 
             d=np.clip(environ.positions, None, 0)
             df = pd.DataFrame(d, columns=environ.tickers.values)
-        # We need to transform the data from raw data to percentage (fraction)
-        # plt.stackplot(df.index, df.T)
 
         fig, ax = plt.subplots(figsize=(12,8))
         ax.stackplot(df.index, df.T, labels=environ.tickers.values)

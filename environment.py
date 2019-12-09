@@ -58,22 +58,12 @@ class Market:
         self.reset()
 	
     def reset(self):
-        # # shuffle stock order
-        # rand_stock_idx = np.arange(self.data.shape[1])
-        # np.random.shuffle(rand_stock_idx)        
-        # self.data = self.data[:, rand_stock_idx]
-        # self.data_ewa = self.data_ewa[:, rand_stock_idx]
-        # self.positions = self.positions[:, rand_stock_idx]
-        # self.tickers = self.tickers[rand_stock_idx]
-
         self.last_index = self.data.shape[0] - 1
         self.current_index = self.start_index
 
         return self.get_state()
 
     def get_state(self):
-        # print(self.data.shape)
-        # print(self.current_index)
         state = self.data_ewa[self.current_index - self.last_n_timesteps + 1: self.current_index + 1, :].copy()
 
         # normalize input
@@ -85,8 +75,6 @@ class Market:
         return state
 
     def get_actions(self):
-        # returns np nd array: no of possible actions x no of tickers
-        # return np.array([np.arange(self.no_of_actions)] * len(self.tickers)).T 
         return np.arange(self.no_of_actions) 
 
     def get_trades(self, action):
@@ -114,49 +102,25 @@ class Market:
         self.cash_positions[self.current_index+1, 0] = self.cash_positions[self.current_index, 0] + np.inner(trades_pruned * -1, self.data[self.current_index+1, :])
 
         # calculate reward (change in portfolio value)
-        # reward = self.portfolio_value[self.current_index+2, 0] - self.portfolio_value[self.current_index+1, 0] # reward is total portfolio pnl
-        # reward -= np.sum(np.abs(trades_pruned)) * self.trans_cost         # apply transaction cost. assuming buy and sell have similar market impact
-        # reward = (self.data[self.current_index+1, :] - self.data[self.current_index, :]) * self.positions[self.current_index, :] # reward by asset
         reward = (self.data_ewa[self.current_index+1, :] - self.data_ewa[self.current_index, :]) * self.positions[self.current_index, :] # reward by asset
         reward -= np.abs(trades_pruned) * self.trans_cost # reduce reward by transaction cost 
         reward = reward / self.initial_wealth
 
         self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum((self.data[self.current_index+1, :] - self.data[self.current_index, :]) * self.positions[self.current_index, :])
-        # self.portfolio_value[self.current_index+1, 0] = self.portfolio_value[self.current_index, 0] + np.sum(reward)
 
-        # return_since_inception = (self.portfolio_value[self.current_index+1, 0] / self.initial_wealth - 1)
-        # if np.sum(reward) != 0.: reward = return_since_inception * reward / np.sum(reward) # pnl allocated to each asset
-        # else: reward = reward * 0
-
-        # # add risk aversion
         reward = [r * (1. + self.risk_averse) if r<0 else r for r in reward ]
-        # print(', price: ', self.data[self.current_index+1, :], 'trades: ', trades_pruned, ', positioins: ', self.positions[self.current_index+1, :], ', reward: ', reward, ', portfolio value: ', self.portfolio_value[self.current_index+1, :], '\n')
 
         return reward # normalize reward by t-1 portfolio value
 
 
     def step(self, action): # action is a list of chosen actions for each stock
-
-        # if action == 0:		# don't buy / sell
-        #     reward = 0.
-        #     self.isAvailable = True
-        # elif action == 1:	# buy
-        #     reward = self.get_noncash_reward()
-        #     self.isAvailable = False
-        # elif action == 2:	# hold
-        #     reward = self.get_noncash_reward()
-        # else:
-        #     raise ValueError('no such action: '+str(action))
         reward = self.get_reward(action) # reward at time t
         self.current_index += 1
         next_state = self.get_state()
         return next_state, reward, self.current_index == self.last_index
 
 if __name__ == '__main__':
-    # gen = Single_Signal_Generator(180, (10, 40), (5, 80), 0.5)
     ticker=['AAPL', 'IBM']
     sample = get_ts(ticker)
-    # print(sample.shape)
-    # print(sample.dtypes)
     env = Market(sample, 20, 3.3)
     env.reset()

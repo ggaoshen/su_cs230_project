@@ -36,8 +36,6 @@ class Q_Model():
             elif i == len(layers)-1:
                 model.add(self._get_layer(layer))
                 model.add(self._get_layer(output_shape=self.no_of_actions * self.state_dim[1])) # model output is flattened
-                # if self.state_dim[1] > 1: 
-                #     model.add(Reshape(target_shape=(self.no_of_actions, self.state_dim[1]), input_shape=(self.no_of_actions * self.state_dim[1], ) )) # model output is flattened
             else:
                 model.add(self._get_layer(layer))
 
@@ -63,9 +61,7 @@ class Q_Model():
                 sys.exit()
 
         elif output_shape:
-            # if output_shape > self.no_of_actions: # in case of multi-stock inputs, output_shape is multiple of no_of_acitons. need to reshape
             return Dense(units=output_shape, activation="sigmoid") # use hard sigmoid for speed
-            # else: 
             #     return Dense(units=output_shape, activation="linear")
 
         else:
@@ -112,9 +108,6 @@ class Q_Model():
         return details
 
     def fit(self, X, Y):
-        # print('action dims:', len(action))
-        # print('q_values dims:', q_values)
-
         hist = self.model.fit(X, Y.reshape(Y.shape[0], -1), 
         # add_dim(Y, (self.no_of_actions * self.state_dim[1], )),
         # validation_split=0.3, 
@@ -122,7 +115,6 @@ class Q_Model():
         epochs=1,
         verbose=0
         ) # actual keras model.fit
-        # print(history.history['loss'])
         return hist.history['loss'] # this returns a list of 1 element
 
     def predict(self, state):
