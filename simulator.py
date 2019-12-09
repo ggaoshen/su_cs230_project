@@ -15,7 +15,7 @@ class Simulator:
         state = self.env.reset()
         done = False
         prev_cum_reward = np.zeros(len(self.env.tickers))
-        # print(prev_cum_reward)
+        loss_history = []
         while not done: # step through time
 
             action = self.agent.act(state, self.env.valid_actions)
@@ -26,17 +26,19 @@ class Simulator:
 
             if training:
                 # self.agent.remember((state, action, reward, next_state, done))
-                self.agent.remember((state, action, prev_cum_reward, next_state, done))
-                self.agent.replay()
+                self.agent.remember((state, action, reward, next_state, done))
+                loss = self.agent.replay(self.env.state_shape, self.env.action_shape_2d)
+                loss_history.append(loss)
 
             state = next_state
-
-        return prev_cum_reward
+        if training: return prev_cum_reward, loss_history[-1]
+        else: return prev_cum_reward, loss_history
 
     def train(self, num_epochs, epsilon_decay=0.995, min_epsilon=0.01, epsilon=1, progress_report=100):
 
         exploration_episode_rewards = []
         episode_ending_portfolio_values = [] # portfolio value by each epoch 
+        episode_ending_losses = []
         # exploration_max_episode_rewards = []
         # safe_max_episode_rewards = []
 
@@ -49,9 +51,10 @@ class Simulator:
             # exploration_episode_reward, exploration_max_episode_reward  = self.play_one_episode(epsilon, training=True)
             # exploration_episode_rewards.append(exploration_episode_reward)
             # exploration_max_episode_rewards.append(exploration_max_episode_reward)
-            exploration_episode_reward = self.play_one_episode(epsilon, training=True)
+            exploration_episode_reward, episode_end_loss = self.play_one_episode(epsilon, training=True)
             exploration_episode_rewards.append(exploration_episode_reward)
             episode_ending_portfolio_values.append(self.env.portfolio_value[-1][0])
+            episode_ending_losses.append(episode_end_loss)
 
             # print('\n', episode_no, exploration_episode_reward, self.env.portfolio_value[-1], self.env.positions[-1])
 
@@ -77,7 +80,7 @@ class Simulator:
         # ax2.plot(self.env.positions[:])
         # plt.savefig('training_progress_and_positions_' + str(num_epochs) + '_episodes.png')
 
-        return episode_ending_portfolio_values, self.env.positions[:], exploration_episode_rewards # return potf value by each episode, last episode's positions
+        return episode_ending_portfolio_values, self.env.positions[:], exploration_episode_rewards, episode_ending_losses # return potf value by each episode, last episode's positions
 
     def test(self):
 
@@ -93,7 +96,7 @@ class Simulator:
             # test_episode_reward, max_reward = self.play_one_episode(0, training=False)
             # test_episode_rewards.append(test_episode_reward)
             # max_rewards.append(max_reward)
-            test_episode_reward = self.play_one_episode(0.2, training=False)
+            test_episode_reward, _ = self.play_one_episode(0.2, training=False)
             # test_episode_rewards.append(test_episode_reward)
             # episode_ending_portfolio_values.append(self.env.portfolio_value[-1])
             # max_rewards.append(max_reward)

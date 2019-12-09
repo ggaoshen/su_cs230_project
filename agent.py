@@ -11,10 +11,11 @@ class Agent:
         self.epsilon = epsilon
 
     def _get_q_valid(self, state):
-        q_valid = self.model.predict(state)[0]
+        q_valid = self.model.predict(state.reshape((1,)+state.shape))[0]
         # q_valid = [np.nan] * len(q)
         # for action in valid_actions:
         #     q_valid[action] = q[action]
+        # print(q_valid.shape)
         return q_valid.reshape((len(q_valid)//state.shape[1], state.shape[1]))
 
     def act(self, state, valid_actions):
@@ -28,13 +29,27 @@ class Agent:
     def remember(self, experience):
         self.memory.append(experience)
 
-    def replay(self):
+    def replay(self, state_size, action_size_2d):
         batch = random.sample(self.memory, min(len(self.memory), self.batch_size))
-        for state, action, reward, next_state, done in batch:
+        X = np.empty((len(batch), )+state_size) # (no of replay steps, no of price lookback window, no of stocks) 
+        Y = np.empty((len(batch), )+action_size_2d) # (no of replay steps, no of valid actions, no of stocks) 
+        # q_hat_2d = self._get_q_valid(state)
+        
+        for i in range(len(batch)): 
+            state, action, reward, next_state, done = batch[i]
+            q_hat_2d = self._get_q_valid(state) # reshape q_hat: self.no_of_actions X self.state_dim[1]
             q = reward
             if not done:
-                q += self.discount_factor * np.nanmax(self._get_q_valid(next_state), axis=0)
-            self.model.fit(state, action, q)
+                q_hat_new_2d = self._get_q_valid(next_state)
+                q += self.discount_factor * np.nanmax(q_hat_new_2d, axis=0)
+
+            for stock_i, action_for_stock_i in enumerate(action):
+                q_hat_2d[action_for_stock_i, stock_i] = q[stock_i]
+
+            X[i] = state
+            Y[i] = q_hat_2d
+        # self.model.fit(X, Y)
+        return self.model.fit(X, Y)
 
     def save_model(self):
         self.model.save()

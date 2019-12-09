@@ -55,19 +55,19 @@ lstm_model = [
 ]
 
 # user input
-no_epochs = 5
+no_epochs = 250
 model_name = 'Dense_8stock_longonly_ewa'
 run_details = model_name + '_' + str(no_epochs) + '_eps'
-# learning rate: 0.005
+learning_rate = 0.0001
 # experience replay batch_size = 16
 
 # build model and agent
-q_model = Q_Model(model_name, state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":0.01})
-agent = Agent(q_model, batch_size=16, discount_factor=0.995, epsilon=0.5)
+q_model = Q_Model(model_name, state_dim=env_train.get_state().shape, no_of_actions=env_train.no_of_actions, layers=dense_model, hyperparameters={"lr":learning_rate})
+agent = Agent(q_model, batch_size=8, discount_factor=0.995, epsilon=0.7)
 
 # train and test
 sim = Simulator(env_train, agent)
-ep_end_portf_val_train, last_eps_position_ts_train, exploration_episode_rewards_train = sim.train(no_epochs, epsilon_decay=0.995)
+ep_end_portf_val_train, last_eps_position_ts_train, exploration_episode_rewards_train, episode_ending_losses = sim.train(no_epochs, epsilon_decay=0.995)
 
 # save model snapshot 
 agent.model.save() 
@@ -76,5 +76,5 @@ sim_test = Simulator(env_test, agent)
 test_portf_val_ts, test_position_ts, test_ending_rewards = sim_test.test()
 
 # visualize result
-viz = Visualize(env_train, env_test, ep_end_portf_val_train, exploration_episode_rewards_train, run_details)
+viz = Visualize(env_train, env_test, ep_end_portf_val_train, exploration_episode_rewards_train, episode_ending_losses, run_details)
 viz.save_test_results()

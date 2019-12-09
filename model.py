@@ -64,7 +64,7 @@ class Q_Model():
 
         elif output_shape:
             # if output_shape > self.no_of_actions: # in case of multi-stock inputs, output_shape is multiple of no_of_acitons. need to reshape
-            return Dense(units=output_shape, activation="hard_sigmoid") # use hard sigmoid for speed
+            return Dense(units=output_shape, activation="sigmoid") # use hard sigmoid for speed
             # else: 
             #     return Dense(units=output_shape, activation="linear")
 
@@ -111,22 +111,19 @@ class Q_Model():
 
         return details
 
-    def fit(self, state, action, q_values):
+    def fit(self, X, Y):
         # print('action dims:', len(action))
         # print('q_values dims:', q_values)
-        q_hat = self.predict(add_dim(state, self.state_dim))[0] # q_hat: 1 X (self.no_of_actions * self.state_dim[1])
-        q_hat = q_hat.reshape((self.no_of_actions, self.state_dim[1])) # reshape q_hat: self.no_of_actions X self.state_dim[1]
-        for stock_i, action_for_stock_i in enumerate(action):
-            q_hat[action_for_stock_i, stock_i] = q_values[stock_i]
 
-        self.model.fit(add_dim(state, self.state_dim), 
-        add_dim(q_hat, (self.no_of_actions * self.state_dim[1], )),
+        hist = self.model.fit(X, Y.reshape(Y.shape[0], -1), 
+        # add_dim(Y, (self.no_of_actions * self.state_dim[1], )),
         # validation_split=0.3, 
         # callbacks = [self.tensorboard], 
-        epochs=5,
-        # verbose=0
+        epochs=1,
+        verbose=0
         ) # actual keras model.fit
         # print(history.history['loss'])
+        return hist.history['loss'] # this returns a list of 1 element
 
     def predict(self, state):
         return self.model.predict(add_dim(state, self.state_dim))

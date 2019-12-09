@@ -5,11 +5,12 @@ import numpy as np
 import pandas as pd
     
 class Visualize():
-    def __init__(self, env_train, env_test, ep_end_portf_val_train, exploration_episode_rewards_train, run_details):
+    def __init__(self, env_train, env_test, ep_end_portf_val_train, exploration_episode_rewards_train, episode_ending_losses, run_details):
         self.env_train = env_train
         self.env_test = env_test
         self.ep_end_portf_val_train = ep_end_portf_val_train
         self.exploration_episode_rewards_train = exploration_episode_rewards_train
+        self.episode_ending_losses = episode_ending_losses 
         self.run_details = run_details
         
     def save_test_results(self):
@@ -27,6 +28,12 @@ class Visualize():
         ax.set_xlabel('Portfolio Value ($)')
         ax.set_title('Ending Total Reward by Training Epochs')
         fig.savefig('visualization/' + str(self.run_details) + '_2_end_totalreward_by_epoch_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
+
+        fig, ax = plt.subplots(figsize=(12,8))
+        ax.plot(np.array(self.episode_ending_losses).reshape(-1))
+        ax.set_xlabel('Epochs(episodes)')
+        ax.set_title('Loss (MSE)')
+        fig.savefig('visualization/' + str(self.run_details) + '_2A_end_MSEloss_by_epoch_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
                 
         buy_and_hold_strategy_portf_value, single_stock_strategy_portf_value = self.generate_benchmark_strats()
         
@@ -42,11 +49,17 @@ class Visualize():
         fig.savefig('visualization/' + str(self.run_details) + '_3_test_dqn_vs_bm_over_time_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
         
         fig, ax = self.plot_positions(self.env_train, long_short='long', title='Long Positions - Train')
-        fig.savefig('visualization/' + str(self.run_details) + '_4_test_positions_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
+        fig.savefig('visualization/' + str(self.run_details) + '_4_train_positions_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
         
         fig, ax = self.plot_positions(self.env_train, long_short='short', title='Short Positions - Train')
-        fig.savefig('visualization/' + str(self.run_details) + '_5_test_positions_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
+        fig.savefig('visualization/' + str(self.run_details) + '_5_train_positions_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
 
+        fig, ax = plt.subplots(figsize=(12,8))
+        ax.plot(self.env_train.cash_positions/self.env_train.portfolio_value[0] - 1)
+        ax.set_xlabel('Time Steps')
+        ax.set_ylabel('Cash Positions')
+        ax.set_title('Cash Positions by Training Time Steps')
+        fig.savefig('visualization/' + str(self.run_details) + '_5A_train_cashpos_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
         
         fig, ax = self.plot_positions(self.env_test, long_short='long', title='Long Positions - Test')
         fig.savefig('visualization/' + str(self.run_details) + '_6_test_positions_'+ datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'.png')
